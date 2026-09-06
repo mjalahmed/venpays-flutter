@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:venpays_flutter/venpays.dart';
+import 'package:venpays_flutter/venpays_flutter.dart';
 
 void main() {
   testWidgets('invalid payment URL is rejected before checkout opens', (tester) async {

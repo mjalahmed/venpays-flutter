@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:venpays_flutter/src/return_url_matcher.dart';
 import 'package:venpays_flutter/src/url_validation.dart';
-import 'package:venpays_flutter/venpays.dart';
+import 'package:venpays_flutter/venpays_flutter.dart';
 
 void main() {
   group('PaymentResult', () {

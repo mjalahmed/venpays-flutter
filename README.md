@@ -6,22 +6,9 @@ The SDK opens the VenPays hosted Mastercard checkout page inside a WebView. It d
 
 ## Installation
 
-### Git dependency (recommended)
-
 ```yaml
 dependencies:
-  venpays_flutter:
-    git:
-      url: https://github.com/Venustusy/venpays-flutter.git
-      ref: 0.1.0
-```
-
-### Local path
-
-```yaml
-dependencies:
-  venpays_flutter:
-    path: ../venpays_flutter
+  venpays_flutter: ^0.1.0
 ```
 
 Then:
@@ -33,7 +20,7 @@ flutter pub get
 ## Basic usage
 
 ```dart
-import 'package:venpays_flutter/venpays.dart';
+import 'package:venpays_flutter/venpays_flutter.dart';
 
 final result = await VenPaysCheckout.start(
   context: context,
