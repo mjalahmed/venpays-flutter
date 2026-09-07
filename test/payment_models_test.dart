@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:venpays_flutter/src/checkout_status_poller.dart';
+import 'package:venpays_flutter/src/engine_url.dart';
 import 'package:venpays_flutter/src/return_url_matcher.dart';
 import 'package:venpays_flutter/src/url_validation.dart';
 import 'package:venpays_flutter/venpays_flutter.dart';
@@ -154,6 +156,72 @@ void main() {
 
     test('rejects http navigation even if path matches', () {
       expect(matcher.match('http://merchant.example/payment/success'), isNull);
+    });
+
+    test('detects PE status query on a different merchant host', () {
+      final match = matcher.match(
+        'https://www.success.com/?track_id=track-123&status=success',
+      );
+      expect(match, isNotNull);
+      expect(match!.status, PaymentStatus.success);
+      expect(match.trackId, 'track-123');
+    });
+
+    test('detects Mastercard PE callback via t_id', () {
+      final match = matcher.match(
+        'https://init-vpay.venlabs.link/mastercard/redirect'
+        '?t_id=track-123&m_id=1&p_id=2&status=success',
+      );
+      expect(match, isNotNull);
+      expect(match!.status, PaymentStatus.success);
+      expect(match.trackId, 'track-123');
+    });
+
+    test('ignores status query for a different track id', () {
+      expect(
+        matcher.match(
+          'https://www.success.com/?track_id=other&status=success',
+        ),
+        isNull,
+      );
+    });
+  });
+
+  group('engine URL helpers', () {
+    test('derives origin from payment URL', () {
+      final origin = engineOriginFromPaymentUrl(
+        'https://init-vpay.venlabs.link/mastercard/payment?payment_id=abc',
+      );
+      expect(origin?.toString(), 'https://init-vpay.venlabs.link');
+    });
+
+    test('detects mastercard redirect callback path', () {
+      expect(
+        isPaymentEngineMastercardCallback(
+          'https://init-vpay.venlabs.link/mastercard/redirect_handler?t_id=1&status=success',
+        ),
+        isTrue,
+      );
+      expect(
+        isPaymentEngineMastercardCallback(
+          'https://merchant.example/payment/success?track_id=1&status=success',
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('status mapping', () {
+    test('maps engine statuses', () {
+      expect(
+        CheckoutStatusPoller.mapEngineStatus('success'),
+        PaymentStatus.success,
+      );
+      expect(
+        CheckoutStatusPoller.mapEngineStatus('FAILED'),
+        PaymentStatus.failed,
+      );
+      expect(CheckoutStatusPoller.mapEngineStatus('pending'), isNull);
     });
   });
 }

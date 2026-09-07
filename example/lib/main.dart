@@ -94,8 +94,8 @@ class _CheckoutDemoPageState extends State<CheckoutDemoPage> {
         context: context,
         paymentUrl: payment.paymentUrl,
         trackId: payment.trackId,
-        successUrl: successReturnUrl,
-        failureUrl: failureReturnUrl,
+        successUrl: payment.successUrl ?? successReturnUrl,
+        failureUrl: payment.failureUrl ?? failureReturnUrl,
       );
 
       if (!mounted) {
@@ -157,6 +157,8 @@ class _CheckoutDemoPageState extends State<CheckoutDemoPage> {
       paymentUrl: body['payment_url'] as String,
       amount: (body['amount'] as num?)?.toDouble() ?? amount,
       currency: body['currency'] as String? ?? currency,
+      successUrl: body['success_url'] as String?,
+      failureUrl: body['failure_url'] as String?,
     );
   }
 
@@ -257,10 +259,14 @@ class _BackendPayment {
     required this.paymentUrl,
     required this.amount,
     required this.currency,
+    this.successUrl,
+    this.failureUrl,
   });
 
   final String trackId;
   final String paymentUrl;
   final double amount;
   final String currency;
+  final String? successUrl;
+  final String? failureUrl;
 }

@@ -107,6 +107,8 @@ failureUrl: 'https://merchant.example/payment/failure',
 
 VenPays appends `track_id` and `status` query parameters on redirect. Those values are informational.
 
+The SDK also polls `GET /v1/sdk/checkout/{track_id}/status` on the Payment Engine host from `paymentUrl`. When that status becomes `success` or `failed`, the checkout sheet dismisses automatically — even if the Profile return URL does not match what you passed in. Closing the sheet after a finished payment reports success/failure, not cancelled.
+
 ## Sandbox and live
 
 Environment selection is performed by your merchant backend:

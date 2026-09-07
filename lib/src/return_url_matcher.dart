@@ -45,6 +45,12 @@ class ReturnUrlMatcher {
   /// Attempts to match [url] against configured return URLs.
   ///
   /// Returns `null` when the navigation is unrelated to payment completion.
+  ///
+  /// Matching order:
+  /// 1. Exact success/failure base URL (scheme/host/port/path)
+  /// 2. VenPays / PE redirect carrying this [expectedTrackId] plus a terminal
+  ///    `status` (`success` / `failed`) — covers Profile URL mismatches and
+  ///    the intermediate Mastercard `t_id` callback hop
   ReturnUrlMatch? match(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
@@ -55,8 +61,9 @@ class ReturnUrlMatcher {
     }
 
     final base = _normalizeBase(uri);
-    final trackId = _queryValue(uri, 'track_id');
+    final trackId = _queryValue(uri, 'track_id') ?? _queryValue(uri, 't_id');
     final redirectStatus = _queryValue(uri, 'status');
+    final terminal = _terminalStatus(redirectStatus);
 
     if (_basesEqual(base, successBase)) {
       if (trackId != null && trackId != expectedTrackId) {
@@ -82,7 +89,35 @@ class ReturnUrlMatcher {
       );
     }
 
+    // PE always appends track id + status on the merchant return redirect, and
+    // the Mastercard callback uses t_id + status before that hop.
+    if (trackId == expectedTrackId && terminal != null) {
+      return ReturnUrlMatch(
+        status: terminal,
+        uri: uri,
+        redirectStatus: redirectStatus,
+        trackId: trackId,
+      );
+    }
+
     return null;
+  }
+
+  static PaymentStatus? _terminalStatus(String? raw) {
+    if (raw == null) {
+      return null;
+    }
+    switch (raw.toLowerCase()) {
+      case 'success':
+      case 'successful':
+        return PaymentStatus.success;
+      case 'failed':
+      case 'fail':
+      case 'failure':
+        return PaymentStatus.failed;
+      default:
+        return null;
+    }
   }
 
   static Uri _normalizeBase(Uri uri) {
