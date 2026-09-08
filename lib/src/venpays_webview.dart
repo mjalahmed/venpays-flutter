@@ -140,7 +140,9 @@ class _VenPaysCheckoutPageState extends State<VenPaysCheckoutPage> {
             redirectStatus: snapshot.rawStatus,
             message: status == PaymentStatus.success
                 ? 'Payment completed.'
-                : 'Payment failed.',
+                : status == PaymentStatus.cancelled
+                    ? 'Checkout was cancelled.'
+                    : 'Payment failed.',
           ),
         );
       },
@@ -199,15 +201,21 @@ class _VenPaysCheckoutPageState extends State<VenPaysCheckoutPage> {
         trackId: widget.options.trackId,
       );
       final snapshot = await probe.fetchOnce();
-      probe.stop();
       terminal = snapshot?.clientStatus;
       rawStatus = snapshot?.rawStatus;
+      if (terminal == null) {
+        // Persist abandonment on the Payment Engine transaction.
+        final cancelled = await probe.cancelOnce();
+        terminal = cancelled?.clientStatus;
+        rawStatus = cancelled?.rawStatus ?? rawStatus;
+      }
+      probe.stop();
     }
-    if (terminal != null) {
+    if (terminal == PaymentStatus.success || terminal == PaymentStatus.failed) {
       _complete(
         PaymentResult(
           trackId: widget.options.trackId,
-          status: terminal,
+          status: terminal!,
           redirectStatus: rawStatus,
           message: terminal == PaymentStatus.success
               ? 'Payment completed.'
@@ -220,6 +228,7 @@ class _VenPaysCheckoutPageState extends State<VenPaysCheckoutPage> {
       PaymentResult(
         trackId: widget.options.trackId,
         status: PaymentStatus.cancelled,
+        redirectStatus: rawStatus,
         message: 'Checkout was cancelled.',
       ),
     );

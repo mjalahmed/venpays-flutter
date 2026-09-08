@@ -107,7 +107,7 @@ failureUrl: 'https://merchant.example/payment/failure',
 
 VenPays appends `track_id` and `status` query parameters on redirect. Those values are informational.
 
-The SDK also polls `GET /v1/sdk/checkout/{track_id}/status` on the Payment Engine host from `paymentUrl`. When that status becomes `success` or `failed`, the checkout sheet dismisses automatically — even if the Profile return URL does not match what you passed in. Closing the sheet after a finished payment reports success/failure, not cancelled.
+The SDK also polls `GET /v1/sdk/checkout/{track_id}/status` on the Payment Engine host from `paymentUrl`. When that status becomes `success`, `failed`, or `cancelled`, the checkout sheet dismisses automatically — even if the Profile return URL does not match what you passed in. Closing the sheet after a finished payment reports success/failure, not cancelled. Closing while still pending calls `POST /v1/sdk/checkout/{track_id}/cancel` so the transaction is marked cancelled on VenPays.
 
 ## Sandbox and live
 
@@ -124,7 +124,7 @@ The Flutter app only opens the `payment_url` returned by your backend. It does n
 |-----------------|---------|
 | `success` | Success return URL detected in the WebView |
 | `failed` | Failure return URL detected in the WebView |
-| `cancelled` | Shopper closed checkout |
+| `cancelled` | Shopper closed checkout (transaction marked cancelled on VenPays) |
 | `error` | Validation, WebView, timeout, or unexpected failure |
 
 Invalid inputs (empty `trackId`, non-HTTPS URLs) throw `VenPaysValidationException` before checkout opens.
@@ -181,4 +181,4 @@ Implement that endpoint by calling VenPays `POST /v1/sdk/checkout` then `POST /v
 
 ## Version
 
-`0.1.0` — card checkout only.
+`0.1.2` — card checkout only.

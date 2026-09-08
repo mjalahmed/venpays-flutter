@@ -221,6 +221,10 @@ void main() {
         CheckoutStatusPoller.mapEngineStatus('FAILED'),
         PaymentStatus.failed,
       );
+      expect(
+        CheckoutStatusPoller.mapEngineStatus('cancelled'),
+        PaymentStatus.cancelled,
+      );
       expect(CheckoutStatusPoller.mapEngineStatus('pending'), isNull);
     });
   });

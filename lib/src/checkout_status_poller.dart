@@ -127,8 +127,49 @@ class CheckoutStatusPoller {
       case 'declined':
       case 'error':
         return PaymentStatus.failed;
+      case 'cancelled':
+      case 'canceled':
+        return PaymentStatus.cancelled;
       default:
         return null;
+    }
+  }
+
+  /// Asks the Payment Engine to mark this checkout cancelled.
+  ///
+  /// Best-effort: failures are ignored so the shopper can still dismiss.
+  Future<CheckoutStatusSnapshot?> cancelOnce() async {
+    final uri = engineOrigin.replace(
+      path: '/v1/sdk/checkout/${Uri.encodeComponent(trackId)}/cancel',
+    );
+    try {
+      final response = await _client.post(
+        uri,
+        headers: const {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return null;
+      }
+      final body = jsonDecode(response.body);
+      if (body is! Map<String, dynamic>) {
+        return null;
+      }
+      final raw = (body['status'] as String?)?.trim() ?? '';
+      if (raw.isEmpty) {
+        return null;
+      }
+      return CheckoutStatusSnapshot(
+        trackId: (body['track_id'] as String?)?.trim().isNotEmpty == true
+            ? body['track_id'] as String
+            : trackId,
+        rawStatus: raw,
+        clientStatus: mapEngineStatus(raw),
+      );
+    } catch (_) {
+      return null;
     }
   }
 }

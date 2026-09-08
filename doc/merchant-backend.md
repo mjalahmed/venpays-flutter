@@ -46,6 +46,8 @@ X-API-KEY: <SECRET>
 
 Fulfill only after authoritative success.
 
+`POST /merchant/payment-status` may return `pending`, `success`, `failed`, or `cancelled`. When the shopper closes the Flutter checkout sheet before paying, the SDK calls `POST /v1/sdk/checkout/{track_id}/cancel` so the transaction becomes `cancelled` instead of staying pending.
+
 ## Return URLs
 
 Configure HTTPS Profile `successUrl` / `failUrl` (or supported per-payment overrides). Pass the same HTTPS URLs into `VenPaysCheckout.start` so the WebView can detect completion.
